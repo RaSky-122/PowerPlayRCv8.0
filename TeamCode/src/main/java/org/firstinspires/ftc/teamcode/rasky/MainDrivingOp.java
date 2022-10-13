@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
 import org.firstinspires.ftc.teamcode.rasky.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.components.LiftControl;
 
 /**
  * The main TeleOP for the driving period of the game.
@@ -29,11 +30,7 @@ public class MainDrivingOp extends LinearOpMode {
     RobotCentricDrive robotCentricDrive;
     FieldCentricDrive fieldCentricDrive;
     Gamepad drivingGamepad;
-    DcMotorEx lift;
 
-    // maxim and minim position for lift motor
-    private final int maxim = 1000;
-    private final int minim = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -48,13 +45,6 @@ public class MainDrivingOp extends LinearOpMode {
         motors.Init(false, true);
         robotCentricDrive = new RobotCentricDrive(motors, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(motors, drivingGamepad, gyroscope);
-
-        //init lift motor
-        lift = hardwareMap.get(DcMotorEx.class, "lift");
-        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lift.setDirection(DcMotorSimple.Direction.FORWARD);
 
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
@@ -81,25 +71,7 @@ public class MainDrivingOp extends LinearOpMode {
 
             robotCentricDrive.setReverse(driveModeButton.getShortToggle());
 
-            if (!driveModeButton.getLongToggle()) {
-                robotCentricDrive.run();
-            } else {
-                fieldCentricDrive.run();
-            }
 
-            if(liftButton.getLongToggle())
-            {
-                if(lift.getCurrentPosition() < maxim)
-                    lift.setPower(1);
-            }
-            else if(liftButton.getShortToggle())
-            {
-                if(lift.getCurrentPosition() > minim)
-                    lift.setPower(-1);
-            }
-
-            if(lift.getCurrentPosition() >= maxim || lift.getCurrentPosition() <= minim)
-                lift.setPower(0);
 
             telemetry.update();
         }
