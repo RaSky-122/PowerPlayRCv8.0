@@ -11,11 +11,11 @@ public class LiftControl {
     DcMotorEx lift;
     int tolerance;
     int target;
+    double speed;
 
-    LiftControl(HardwareMap hardwareMap, int tolerance)
+    public LiftControl(HardwareMap hardwareMap, int tolerance, double speed)
     {
         this.tolerance = tolerance;
-        this.target = 0;
 
         lift = hardwareMap.get(DcMotorEx.class, "lift");
 
@@ -23,16 +23,30 @@ public class LiftControl {
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        this.target = lift.getCurrentPosition();
     }
 
     void setTarget(int val) {
         target = val;
     }
 
-    void run(){
-
-
-
+    void setSpeed(double val) {
+        speed = val;
     }
 
+    void run(){
+
+        double dir; // direction
+
+        if(lift.getCurrentPosition() < target)
+            dir = 1;
+        else
+            dir = -1;
+
+        if(lift.getCurrentPosition() >= target - tolerance && lift.getCurrentPosition() <= target + tolerance)
+            lift.setPower(speed * dir);
+        else
+            lift.setPower(0);
+    }
 }
