@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftControl;
 
 /**
- * The main TeleOP for the driving period of the game.
+ * The main TeleOP program for the driving period of the game.
  *
  * @author Lucian
  * @version 1.2
