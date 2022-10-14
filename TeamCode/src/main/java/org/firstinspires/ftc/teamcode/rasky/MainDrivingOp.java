@@ -30,6 +30,7 @@ public class MainDrivingOp extends LinearOpMode {
     RobotCentricDrive robotCentricDrive;
     FieldCentricDrive fieldCentricDrive;
     Gamepad drivingGamepad;
+    LiftControl lift;
 
 
     @Override
@@ -45,6 +46,8 @@ public class MainDrivingOp extends LinearOpMode {
         motors.Init(false, true);
         robotCentricDrive = new RobotCentricDrive(motors, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(motors, drivingGamepad, gyroscope);
+
+        lift = new LiftControl(hardwareMap, 10, 1);
 
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
@@ -70,8 +73,6 @@ public class MainDrivingOp extends LinearOpMode {
             liftButton.longPress();
 
             robotCentricDrive.setReverse(driveModeButton.getShortToggle());
-
-
 
             telemetry.update();
         }
