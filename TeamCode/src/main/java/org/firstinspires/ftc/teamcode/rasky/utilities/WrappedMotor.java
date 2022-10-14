@@ -61,7 +61,7 @@ public class WrappedMotor {
         else
             direction = -1;
 
-        if (Math.abs(Math.abs(targetPosition) - Math.abs(currentPosition)) > tolerance)
+        if (Math.abs(targetPosition - currentPosition) > tolerance)
             motor.setPower(speed * direction);
         else if (hold)
             motor.setPower(0.1);
