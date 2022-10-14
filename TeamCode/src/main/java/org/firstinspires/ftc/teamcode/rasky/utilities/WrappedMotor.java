@@ -53,6 +53,9 @@ public class WrappedMotor {
 
     double direction = 1;
 
+    /**
+     * Call this method asynchronously to update the lift's motor position.
+     */
     public void updatePosition() {
         currentPosition = motor.getCurrentPosition();
 

@@ -2,18 +2,21 @@ package org.firstinspires.ftc.teamcode.rasky;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
-import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
 import org.firstinspires.ftc.teamcode.rasky.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.components.LiftControl;
 
 /**
- * The main TeleOP for the driving period of the game.
+ * The main TeleOP program for the driving period of the game.
  *
  * @author Lucian
  * @version 1.2
@@ -26,29 +29,25 @@ public class MainDrivingOp extends LinearOpMode {
 
     RobotCentricDrive robotCentricDrive;
     FieldCentricDrive fieldCentricDrive;
-    LiftSystem liftSystem;
-
     Gamepad drivingGamepad;
-    Gamepad utilityGamepad;
+    LiftControl lift;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        //Set the gamepads to the desired gamepad
-        drivingGamepad = gamepad1;
-        utilityGamepad = gamepad2;
-
         motors = new DrivingMotors(hardwareMap);
-        motors.Init(false, true);
-
-        liftSystem = new LiftSystem(hardwareMap, utilityGamepad);
-        liftSystem.Init();
-
         gyroscope = new Gyroscope(hardwareMap);
-        gyroscope.Init();
 
+        //Set the driving gamepad to the desired gamepad
+        drivingGamepad = gamepad1;
+
+        gyroscope.Init();
+        motors.Init(false, true);
         robotCentricDrive = new RobotCentricDrive(motors, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(motors, drivingGamepad, gyroscope);
+
+        lift = new LiftControl(hardwareMap, 10, 1);
 
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
@@ -61,6 +60,7 @@ public class MainDrivingOp extends LinearOpMode {
         if (isStopRequested()) return;
 
         Button driveModeButton = new Button();
+        Button liftButton = new Button();
 
         //Main while loop that runs during the match
         while (opModeIsActive() && !isStopRequested()) {
@@ -68,16 +68,11 @@ public class MainDrivingOp extends LinearOpMode {
             driveModeButton.shortPress();
             driveModeButton.longPress();
 
+            liftButton.updateButton(drivingGamepad.y);
+            liftButton.shortPress();
+            liftButton.longPress();
+
             robotCentricDrive.setReverse(driveModeButton.getShortToggle());
-
-            if (!driveModeButton.getLongToggle()) {
-                robotCentricDrive.run();
-            } else {
-                fieldCentricDrive.run();
-            }
-
-            liftSystem.run();
-            liftSystem.showInfo(telemetry);
 
             telemetry.update();
         }
