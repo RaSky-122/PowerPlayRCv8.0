@@ -33,7 +33,7 @@ public class DrivingMotors {
      * @param encoders Boolean value that checks if motor encoders should be used or not
      * @param brakes   Boolean value that checks if the motors should brake or stop on their own
      */
-    public void Init(Boolean encoders, Boolean brakes) {
+    public void Init() {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -45,15 +45,9 @@ public class DrivingMotors {
         for (DcMotorEx motor : motors) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-            if (brakes)
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            else
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-            if (encoders)
-                motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            else
-                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
         //Reverse any motors if needed here:

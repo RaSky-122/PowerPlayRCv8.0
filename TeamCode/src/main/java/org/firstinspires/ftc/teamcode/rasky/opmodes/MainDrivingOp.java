@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.rasky;
+package org.firstinspires.ftc.teamcode.rasky.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -41,7 +41,7 @@ public class MainDrivingOp extends LinearOpMode {
         utilityGamepad = gamepad2;
 
         motors = new DrivingMotors(hardwareMap);
-        motors.Init(false, true);
+        motors.Init();
 
         liftSystem = new LiftSystem(hardwareMap, utilityGamepad);
         liftSystem.Init();

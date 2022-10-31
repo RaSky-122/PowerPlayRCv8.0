@@ -32,7 +32,7 @@ public class DriveEncodersTest extends LinearOpMode {
         gamepad = gamepad1;
 
         motors = new DrivingMotors(hardwareMap);
-        motors.Init(true, true);
+        motors.Init();
 
         debugDriveMode = new DebugDriveMode(motors, gamepad);
         robotCentricDrive = new RobotCentricDrive(motors, gamepad);

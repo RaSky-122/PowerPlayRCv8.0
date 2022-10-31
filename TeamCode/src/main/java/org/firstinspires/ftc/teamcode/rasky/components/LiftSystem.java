@@ -59,7 +59,7 @@ public class LiftSystem {
     int toggleStates = 0;
 
     public void run() {
-        resetButton.updateButton(gamepad.a);
+        resetButton.updateButton(gamepad.b);
         liftButton.updateButton(gamepad.y);
 
         if (resetButton.press())
