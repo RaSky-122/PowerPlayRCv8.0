@@ -1,16 +1,16 @@
 package org.firstinspires.ftc.teamcode.rasky.components;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
-import org.firstinspires.ftc.teamcode.rasky.utilities.WrappedServo;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedServo;
 
 /**
  * Lift claw mechanism.
- *
+ * <p>
+ * !! CALL INIT() METHOD BEFORE USING !!
  * @author Lucian
  * @version 1.1
  */

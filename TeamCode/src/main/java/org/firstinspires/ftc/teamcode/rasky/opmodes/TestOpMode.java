@@ -5,19 +5,20 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.rasky.components.AntiTipDrive;
+import org.firstinspires.ftc.teamcode.rasky.components.DriveSystem;
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftClaw;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
 
 /**
  * The test TeleOP program for testing new features.
  *
  * @author Lucian
- * @version 1.0
+ * @version 1.2
  */
 @TeleOp(name = "Test OpMode", group = Constants.testGroup)
 public class TestOpMode extends LinearOpMode {
@@ -25,8 +26,7 @@ public class TestOpMode extends LinearOpMode {
     DrivingMotors motors;
     Gyroscope gyroscope;
 
-    AntiTipDrive antiTipDrive;
-    FieldCentricDrive fieldCentricDrive;
+    DriveSystem driveSystem;
     LiftSystem liftSystem;
     LiftClaw liftClaw;
 
@@ -52,8 +52,7 @@ public class TestOpMode extends LinearOpMode {
         gyroscope = new Gyroscope(hardwareMap);
         gyroscope.Init();
 
-        antiTipDrive = new AntiTipDrive(motors, drivingGamepad, gyroscope);
-        fieldCentricDrive = new FieldCentricDrive(motors, drivingGamepad, gyroscope);
+        driveSystem = new DriveSystem(motors, drivingGamepad, gyroscope, hardwareMap);
 
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
@@ -73,21 +72,14 @@ public class TestOpMode extends LinearOpMode {
             driveModeButton.shortPress();
             driveModeButton.longPress();
 
-            antiTipDrive.setReverse(driveModeButton.getShortToggle());
-
-            if (!driveModeButton.getLongToggle()) {
-                antiTipDrive.run();
-                //antiTipDrive.showInfo(telemetry);
-            } else {
-                fieldCentricDrive.run();
-                //fieldCentricDrive.showInfo(telemetry);
-            }
+            driveSystem.run();
+            //driveSystem.showInfo(telemetry);
 
             liftSystem.run();
             //liftSystem.showInfo(telemetry);
 
             liftClaw.run();
-            liftClaw.showInfo(telemetry);
+            //liftClaw.showInfo(telemetry);
 
             telemetry.update();
         }

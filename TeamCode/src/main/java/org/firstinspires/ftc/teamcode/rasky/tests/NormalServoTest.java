@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 
 /**

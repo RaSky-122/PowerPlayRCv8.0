@@ -4,11 +4,14 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
-import org.firstinspires.ftc.teamcode.rasky.utilities.WrappedMotor;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor;
 
 /**
  * The class that operates the lift.
+ *
+ * <p>
+ * !! CALL INIT() METHOD BEFORE USING !!
  *
  * @author Lucian
  * @version 1.2

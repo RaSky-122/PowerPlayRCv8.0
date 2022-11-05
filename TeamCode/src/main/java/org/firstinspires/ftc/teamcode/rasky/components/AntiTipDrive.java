@@ -5,14 +5,15 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
 
 /**
  * Basic, Joystick based, mecanum drive with an anti tip controller.
  *
  * @author Lucian
- * @version 1.0
+ * @version 1.1
  */
+@Deprecated
 public class AntiTipDrive {
 
     DrivingMotors motors;
@@ -39,6 +40,8 @@ public class AntiTipDrive {
         this.gyroscope = gyroscope;
         forwardAnglePID = new ControllerPID(Kp, Ki, Kd);
         lateralAnglePID = new ControllerPID(Kp, Ki, Kd);
+        gyroscope.updateOrientation();
+        gyroscope.initFirstAngles();
     }
 
     /**
@@ -46,14 +49,15 @@ public class AntiTipDrive {
      */
     public void run() {
 
-        forwardAngleValuePID = -forwardAnglePID.calculate(0.5,
-                Math.toDegrees(gyroscope.getForwardAngle()));
-        lateralAngleValuePID = lateralAnglePID.calculate(89,
-                Math.toDegrees(gyroscope.getLateralAngle()));
+        gyroscope.updateOrientation();
+        forwardAngleValuePID = forwardAnglePID.calculate(gyroscope.firstForward,
+                gyroscope.getForwardAngle());
+        lateralAngleValuePID = lateralAnglePID.calculate(gyroscope.firstLateral,
+                gyroscope.getLateralAngle());
 
-        if (Math.abs(Math.toDegrees(gyroscope.getForwardAngle())) > 6)
+        if (Math.abs(gyroscope.getForwardAngle() - gyroscope.firstForward) > 7.5)
             lateralAngleValuePID = 0;
-        else if (Math.abs(Math.toDegrees(gyroscope.getLateralAngle())) > 6)
+        else if (Math.abs(gyroscope.getLateralAngle() - gyroscope.firstLateral) > 7.5)
             forwardAngleValuePID = 0;
         else
             lateralAngleValuePID = forwardAngleValuePID = 0;

@@ -3,21 +3,22 @@ package org.firstinspires.ftc.teamcode.rasky.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftClaw;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
 import org.firstinspires.ftc.teamcode.rasky.components.RobotCentricDrive;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
 
 /**
  * The main TeleOP program for the driving period of the game.
  *
  * @author Lucian
- * @version 2.0
+ * @version 2.1
  */
 @TeleOp(name = "Main Driving", group = Constants.mainGroup)
 public class MainDrivingOp extends LinearOpMode {
@@ -51,8 +52,6 @@ public class MainDrivingOp extends LinearOpMode {
 
         gyroscope = new Gyroscope(hardwareMap);
         gyroscope.Init();
-
-
 
         robotCentricDrive = new RobotCentricDrive(motors, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(motors, drivingGamepad, gyroscope);

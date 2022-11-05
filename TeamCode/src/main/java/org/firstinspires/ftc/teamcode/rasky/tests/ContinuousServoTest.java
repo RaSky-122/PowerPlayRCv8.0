@@ -3,11 +3,9 @@ package org.firstinspires.ftc.teamcode.rasky.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 
 /**

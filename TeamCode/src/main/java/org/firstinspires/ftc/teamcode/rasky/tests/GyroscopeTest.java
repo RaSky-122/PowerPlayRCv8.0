@@ -2,20 +2,15 @@ package org.firstinspires.ftc.teamcode.rasky.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.rasky.utilities.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
 
 /**
  * Class for testing the built-in Control Hub Gyroscope.
  *
  * @author Lucian
- * @version 1.0
+ * @version 1.2
  */
 @TeleOp(name = "Gyroscope Test", group = Constants.testGroup)
 public class GyroscopeTest extends LinearOpMode {
@@ -43,8 +38,9 @@ public class GyroscopeTest extends LinearOpMode {
 
         //Main while loop that runs during the match
         while (opModeIsActive() && !isStopRequested()) {
-
-            gyroscope.showAllInfo(telemetry);
+            gyroscope.updateOrientation();
+            gyroscope.updateVelocity();
+            gyroscope.showInfo(telemetry);
             telemetry.update();
         }
 
