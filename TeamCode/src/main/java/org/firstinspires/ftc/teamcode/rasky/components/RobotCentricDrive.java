@@ -9,8 +9,9 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
  * Basic, Joystick based, mecanum drive.
  *
  * @author Lucian
- * @version 1.2
+ * @version 1.3
  */
+@Deprecated
 public class RobotCentricDrive {
 
     DrivingMotors motors;

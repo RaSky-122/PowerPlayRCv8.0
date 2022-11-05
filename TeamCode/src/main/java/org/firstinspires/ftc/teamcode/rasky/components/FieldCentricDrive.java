@@ -1,18 +1,18 @@
 package org.firstinspires.ftc.teamcode.rasky.components;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
-import org.firstinspires.ftc.teamcode.rasky.utilities.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
 
 /**
  * FieldCentric version of the class RobotCentricDrive.java
  *
  * @author Lucian
- * @version 1.2
+ * @version 1.3
  */
+@Deprecated
 public class FieldCentricDrive {
 
     DrivingMotors motors;
@@ -40,7 +40,7 @@ public class FieldCentricDrive {
         double y = -gamepad.left_stick_y; // Forward, Vertical Axis (joystick has +/- flipped)
         double r = gamepad.right_stick_x; // Rotation, Horizontal Axis
 
-        double neededOffset = -gyroscope.getHeading();
+        double neededOffset = -Math.toRadians(gyroscope.getHeading());
 
         // See this to understand the formulas: https://matthew-brett.github.io/teaching/rotation_2d.html
         double rotatedX = x * Math.cos(neededOffset) - y * Math.sin(neededOffset);
