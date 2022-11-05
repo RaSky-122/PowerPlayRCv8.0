@@ -1,17 +1,21 @@
-package org.firstinspires.ftc.teamcode.rasky.utilities;
+package org.firstinspires.ftc.teamcode.rasky.utilities.wrappers;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
 
 /**
  * Wrapper class for the Control Hub Gyroscope.
+ * <p>
+ * !! CALL INIT() METHOD BEFORE USING !!
  *
  * @author Lucian
- * @version 1.2
+ * @version 2.0
  */
 public class Gyroscope {
     BNO055IMU imu;
@@ -33,7 +37,7 @@ public class Gyroscope {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         // Technically this is the default, however specifying it is clearer
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         // Without this, data retrieving from the IMU throws an exception
         imu.initialize(parameters);
     }
@@ -42,21 +46,54 @@ public class Gyroscope {
         return imu;
     }
 
+    Orientation angularOrientation;
+    AngularVelocity angularVelocity;
+    double updateInterval = 1;
+
+
+    ElapsedTime oriUpdateTimer = new ElapsedTime();
+
+    public void updateOrientation() {
+        if (oriUpdateTimer.milliseconds() > updateInterval) {
+            angularOrientation = imu.getAngularOrientation();
+            oriUpdateTimer.reset();
+        }
+    }
+
+    ElapsedTime velUpdateTimer = new ElapsedTime();
+
+    public void updateVelocity() {
+        if (velUpdateTimer.milliseconds() > updateInterval) {
+            angularVelocity = imu.getAngularVelocity();
+            velUpdateTimer.reset();
+        }
+    }
+
+    /**
+     * Set the minimum time before updating orientation and velocity.
+     *
+     * @param updateInterval Update interval in milliseconds.
+     */
+    public void setUpdateInterval(double updateInterval) {
+        this.updateInterval = updateInterval;
+    }
+
     public double getHeading() {
-        return imu.getAngularOrientation().firstAngle;
+        return angularOrientation.firstAngle;
     }
 
     public double getForwardAngle() {
-        return imu.getAngularOrientation().secondAngle * -1;
+        return angularOrientation.secondAngle;
     }
 
     public double getLateralAngle() {
-        return imu.getAngularOrientation().thirdAngle;
+        return angularOrientation.thirdAngle;
     }
 
-    //Not working, idk why
+    //TODO: fix this :)
     public void initFirstAngles() {
-        if (!firstAngles) {
+        ElapsedTime initTime = new ElapsedTime();
+        while (firstHeading == firstLateral && firstLateral == firstForward && initTime.milliseconds() < 2000) {
             firstAngles = true;
             firstHeading = getHeading();
             firstLateral = getLateralAngle();
@@ -67,19 +104,14 @@ public class Gyroscope {
     ControllerPID secondAnglePID = new ControllerPID(0.01, 0, 0);
     ControllerPID thirdAnglePID = new ControllerPID(0.01, 0, 0);
 
-    public void showAllInfo(Telemetry telemetry) {
-        Orientation angularOrientation = imu.getAngularOrientation();
-        AngularVelocity angularVelocity = imu.getAngularVelocity();
-
-        angularOrientation.secondAngle = angularOrientation.secondAngle * -1;
-
-        double secondAngleResult = -secondAnglePID.calculate(0, Math.toDegrees(angularOrientation.secondAngle));
-        double thirdAngleResult = thirdAnglePID.calculate(90, Math.toDegrees(angularOrientation.thirdAngle));
+    public void showInfo(Telemetry telemetry) {
+        double secondAngleResult = secondAnglePID.calculate(0, angularOrientation.secondAngle);
+        double thirdAngleResult = thirdAnglePID.calculate(90, angularOrientation.thirdAngle);
 
         telemetry.addLine("---ANGLES---");
-        telemetry.addData("First Angle: ", Math.toDegrees(angularOrientation.firstAngle));
-        telemetry.addData("Second Angle: ", Math.toDegrees(angularOrientation.secondAngle));
-        telemetry.addData("Third Angle: ", Math.toDegrees(angularOrientation.thirdAngle));
+        telemetry.addData("First Angle: ", angularOrientation.firstAngle);
+        telemetry.addData("Second Angle: ", angularOrientation.secondAngle);
+        telemetry.addData("Third Angle: ", angularOrientation.thirdAngle);
 
         telemetry.addLine("---PID---");
         telemetry.addData("Second Angle PID: ", secondAngleResult);
