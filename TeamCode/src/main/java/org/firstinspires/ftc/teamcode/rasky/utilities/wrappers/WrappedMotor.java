@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.rasky.utilities;
+package org.firstinspires.ftc.teamcode.rasky.utilities.wrappers;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
