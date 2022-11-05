@@ -14,9 +14,10 @@ import java.util.Arrays;
  * <p>
  * It initializes all of the motors given a set of parameters and then they are ready to use
  * through the object.
- *
+ * <p>
+ * !! CALL INIT() METHOD BEFORE USING !!
  * @author Lucian
- * @version 1.3
+ * @version 1.4
  */
 public class DrivingMotors {
     public DcMotorEx leftRear, rightRear, leftFront, rightFront;
@@ -27,11 +28,8 @@ public class DrivingMotors {
     }
 
     /**
-     * This method initializes each driving motor to be easily accessed from the
-     * object when testing.
-     *
-     * @param encoders Boolean value that checks if motor encoders should be used or not
-     * @param brakes   Boolean value that checks if the motors should brake or stop on their own
+     * Call before using the class.
+     * This method initializes each driving motor.
      */
     public void Init() {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
@@ -47,7 +45,7 @@ public class DrivingMotors {
 
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         //Reverse any motors if needed here:

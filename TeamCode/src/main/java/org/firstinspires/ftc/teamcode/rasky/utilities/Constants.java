@@ -17,6 +17,7 @@ public class Constants {
     public static final String testGroup = "test";
     public static final String mainGroup = "main";
 
+    //Theoretical value added to the lateral distance between the 2 parallel deadwheels
     public static final double lateralError = 0.11;
 
     //Deadwheels positions for RoadRunner used in StandardTrackingWheelLocalizer.java
