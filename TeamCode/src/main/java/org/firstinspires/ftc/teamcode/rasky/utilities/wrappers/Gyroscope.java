@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
  * !! CALL INIT() METHOD BEFORE USING !!
  *
  * @author Lucian
- * @version 2.0
+ * @version 2.1
  */
 public class Gyroscope {
     BNO055IMU imu;
@@ -94,6 +94,7 @@ public class Gyroscope {
     public void initFirstAngles() {
         ElapsedTime initTime = new ElapsedTime();
         while (firstHeading == firstLateral && firstLateral == firstForward && initTime.milliseconds() < 2000) {
+            updateOrientation();
             firstAngles = true;
             firstHeading = getHeading();
             firstLateral = getLateralAngle();

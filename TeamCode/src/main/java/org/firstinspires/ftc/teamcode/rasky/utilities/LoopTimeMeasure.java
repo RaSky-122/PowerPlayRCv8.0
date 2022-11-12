@@ -11,7 +11,7 @@ import java.util.LinkedList;
  * This class measures the average time in ms between each loop.
  *
  * @author Lucian
- * @version 1.0
+ * @version 1.1
  */
 public class LoopTimeMeasure {
 
@@ -45,6 +45,7 @@ public class LoopTimeMeasure {
 
         //Shows average loop time based on the average of all the times in the pooling rate
         timeSum += timeDiff;
+        times.offerLast(timeDiff);
         if (times.size() > poolingRate) {
             timeSum -= times.pop();
             telemetry.addData("Avg Time: ", timeSum / poolingRate);

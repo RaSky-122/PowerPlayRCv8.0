@@ -29,12 +29,17 @@ public class LiftSystem {
         this.hardwareMap = hardwareMap;
     }
 
+    double kP = 0.0075, kI = 0, kD = 0;
     /**
      * Call this method before using the object.
      */
     public void Init() {
         liftMotor = new WrappedMotor(hardwareMap);
         liftMotor.Init("liftMotor", true, false, true);
+
+        liftMotor.setPositionPIDMode(true);
+        liftMotor.setPositionPID(kP, kI, kD);
+
         liftMotor.setTolerance(tolerance);
         liftMotor.setSpeed(speed);
         liftMotor.setEncoderDirection(1);
@@ -101,7 +106,7 @@ public class LiftSystem {
         telemetry.addData("Lift TargetPos: ", liftMotor.targetPosition);
         telemetry.addData("Lift Current Position: ", liftMotor.currentPosition);
 
-        telemetry.addData("Motor Speed: ", speed);
+        telemetry.addData("Motor Power: ", liftMotor.motor.getPower());
         telemetry.addData("Lift Encoder: ", liftMotor.motor.getCurrentPosition());
 
         telemetry.addData("Position Tolerance: ", tolerance);

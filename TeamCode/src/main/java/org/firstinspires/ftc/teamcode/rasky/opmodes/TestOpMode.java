@@ -10,6 +10,8 @@ import org.firstinspires.ftc.teamcode.rasky.components.DriveSystem;
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftClaw;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
+import org.firstinspires.ftc.teamcode.rasky.learning.TestClass;
+import org.firstinspires.ftc.teamcode.rasky.utilities.LoopTimeMeasure;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
@@ -67,6 +69,9 @@ public class TestOpMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         Button driveModeButton = new Button();
+        driveSystem.setAntiTipMode(false);
+
+        LoopTimeMeasure loopTime = new LoopTimeMeasure(telemetry);
 
         //Main while loop that runs during the match
         while (opModeIsActive() && !isStopRequested()) {
@@ -75,13 +80,15 @@ public class TestOpMode extends LinearOpMode {
             driveModeButton.longPress();
 
             driveSystem.run();
-            //driveSystem.showInfo(telemetry);
+            driveSystem.showInfo(telemetry);
 
             liftSystem.run();
-            //liftSystem.showInfo(telemetry);
+            liftSystem.showInfo(telemetry);
 
             liftClaw.run();
             //liftClaw.showInfo(telemetry);
+
+            loopTime.measure();
 
             telemetry.update();
         }

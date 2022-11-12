@@ -143,9 +143,9 @@ public class DriveSystem {
         forwardAngleValuePID = forwardAnglePID.calculate(gyroscope.firstForward, gyroscope.getForwardAngle());
         lateralAngleValuePID = lateralAnglePID.calculate(gyroscope.firstLateral, gyroscope.getLateralAngle());
 
-        if (Math.abs(gyroscope.getForwardAngle() - gyroscope.firstForward) > 7.5) {
+        if (Math.abs(gyroscope.getForwardAngle() - gyroscope.firstForward) > 5) {
             lateralAngleValuePID = 0;
-        } else if (Math.abs(gyroscope.getLateralAngle() - gyroscope.firstLateral) > 7.5) {
+        } else if (Math.abs(gyroscope.getLateralAngle() - gyroscope.firstLateral) > 5) {
             forwardAngleValuePID = 0;
         } else {
             lateralAngleValuePID = forwardAngleValuePID = 0;
@@ -199,8 +199,8 @@ public class DriveSystem {
         }
 
         if (antiTipMode) {
-            telemetry.addData("Forward Angle: ", Math.toDegrees(gyroscope.getForwardAngle()));
-            telemetry.addData("Lateral Angle: ", Math.toDegrees(gyroscope.getLateralAngle()));
+            telemetry.addData("Forward Angle: ", gyroscope.getForwardAngle());
+            telemetry.addData("Lateral Angle: ", gyroscope.getLateralAngle());
             telemetry.addData("Forward Angle PID: ", forwardAngleValuePID);
             telemetry.addData("Lateral Angle PID: ", lateralAngleValuePID);
         }
