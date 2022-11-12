@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+
+import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
 
 /**
  * This class is made as a wrapper for the the motors to be able to more easily initialize and
@@ -15,6 +18,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class WrappedMotor {
     public DcMotorEx motor;
     HardwareMap hardwareMap;
+    VoltageSensor voltageSensor;
 
     public WrappedMotor(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
@@ -31,6 +35,7 @@ public class WrappedMotor {
     public void Init(String name, boolean isReversed, boolean isPID, boolean brakes) {
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         this.setDirection(isReversed);
         this.setPIDMode(isPID);
@@ -64,14 +69,42 @@ public class WrappedMotor {
         else
             direction = -1;
 
-        if (Math.abs(targetPosition - currentPosition) > tolerance)
-            motor.setPower(speed * direction);
-        else if (hold)
+        if (voltageCompensated)
+            voltageCompensation = 12 / voltageSensor.getVoltage();
+        else
+            voltageCompensation = 1;
+
+
+        if (Math.abs(targetPosition - currentPosition) > tolerance) {
+            if (positionPIDMode)
+                motor.setPower(-positionPID.calculate(currentPosition, targetPosition) * speed * voltageCompensation);
+            else
+                motor.setPower(speed * direction * voltageCompensation);
+        } else if (hold)
             motor.setPower(0.1);
         else
             motor.setPower(0);
 
     }
+
+    boolean voltageCompensated = false;
+    double voltageCompensation = 1;
+
+    public void setVoltageCompensated(boolean voltageCompensated) {
+        this.voltageCompensated = voltageCompensated;
+    }
+
+    boolean positionPIDMode = false;
+    ControllerPID positionPID = new ControllerPID(0, 0, 0);
+
+    public void setPositionPIDMode(boolean positionPIDMode) {
+        this.positionPIDMode = positionPIDMode;
+    }
+
+    public void setPositionPID(double kP, double kI, double kD) {
+        positionPID = new ControllerPID(kP, kI, kD);
+    }
+
 
     public boolean isBusy() {
         if (Math.abs(targetPosition - currentPosition) > tolerance)
