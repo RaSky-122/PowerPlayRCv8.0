@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor;
  * !! CALL INIT() METHOD BEFORE USING !!
  *
  * @author Lucian
- * @version 1.2
+ * @version 1.3
  */
 public class LiftSystem {
     Gamepad gamepad;
@@ -35,13 +35,13 @@ public class LiftSystem {
      */
     public void Init() {
         liftMotor = new WrappedMotor(hardwareMap);
-        liftMotor.Init("liftMotor", true, false, true);
+        liftMotor.Init("liftMotor", true, false, true, true);
 
         liftMotor.setPositionPIDMode(true);
         liftMotor.setPositionPID(kP, kI, kD);
 
         liftMotor.setTolerance(tolerance);
-        liftMotor.setSpeed(speed);
+        liftMotor.setSpeedMultiplier(speed);
         liftMotor.setEncoderDirection(1);
         liftMotor.holdMode(true);
     }

@@ -28,7 +28,7 @@ public class LiftClaw {
      * Call this method before using the claw.
      */
     public void Init() {
-        clawServo = new WrappedServo(hardwareMap);
+        clawServo = new WrappedServo(hardwareMap, 500, 2500);
         clawServo.Init("claw", false, true);
     }
 
