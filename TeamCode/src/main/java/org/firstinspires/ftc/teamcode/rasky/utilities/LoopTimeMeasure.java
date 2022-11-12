@@ -11,7 +11,7 @@ import java.util.LinkedList;
  * This class measures the average time in ms between each loop.
  *
  * @author Lucian
- * @version 1.1
+ * @version 1.2
  */
 public class LoopTimeMeasure {
 
@@ -24,7 +24,7 @@ public class LoopTimeMeasure {
     boolean started = false;
     double lastTime = 0;
     double timeSum = 0;
-    double poolingRate = 50;
+    int poolingRate = 50;
 
     ElapsedTime timer = new ElapsedTime();
     Deque<Double> times = new LinkedList<Double>();
@@ -50,6 +50,16 @@ public class LoopTimeMeasure {
             timeSum -= times.pop();
             telemetry.addData("Avg Time: ", timeSum / poolingRate);
         }
+    }
+
+    /**
+     * Change the pooling rate of the loop measurer.
+     * <p>
+     * Default pooling rate is 50 loops.
+     * @param poolingRate New pooling rate
+     */
+    public void setPoolingRate(int poolingRate) {
+        this.poolingRate = poolingRate;
     }
 
 }
