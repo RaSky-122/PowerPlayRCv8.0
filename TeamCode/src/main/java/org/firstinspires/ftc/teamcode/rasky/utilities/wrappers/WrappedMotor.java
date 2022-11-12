@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
  * run them to a given position.
  *
  * @author Lucian
- * @version 1.2
+ * @version 2.0
  */
 public class WrappedMotor {
     public DcMotorEx motor;
@@ -27,21 +27,73 @@ public class WrappedMotor {
     /**
      * Initialization method.
      *
-     * @param name       The name of the motor
-     * @param isReversed If the direction of the motor is reversed or not
-     * @param isPID      If the motor should be controlled by a PID controller or not
-     * @param brakes     If the motor should brake on 0 power or not
+     * @param name             The name of the motor
+     * @param isReversed       If the direction of the motor is reversed or not
+     * @param velocityPIDFMode If the motor should be controlled by a PID controller or not
+     * @param positionPIDMode  If the motor position should be controlled by a PID controller or not
+     * @param brakes           If the motor should brake on 0 power or not
      */
-    public void Init(String name, boolean isReversed, boolean isPID, boolean brakes) {
+    public void Init(String name, boolean isReversed, boolean velocityPIDFMode, boolean positionPIDMode, boolean brakes) {
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         this.setDirection(isReversed);
-        this.setPIDMode(isPID);
+        this.setPositionPIDMode(positionPIDMode);
+        this.setVelocityPIDFMode(velocityPIDFMode);
         this.setBrakes(brakes);
     }
 
+    /**
+     * Call this method asynchronously to update the lift's motor position.
+     */
+    public void updatePosition() {
+        currentPosition = motor.getCurrentPosition() * encoderDirection;
+
+        direction = getDirection();
+        voltageCompensation = getVoltageCompensation();
+        double PIDValue = positionPID.calculate(currentPosition, targetPosition);
+
+        if (this.isBusy()) {
+            if (positionPIDMode)
+                motor.setPower(-PIDValue * speedMultiplier * voltageCompensation);
+            else
+                motor.setPower(direction * speedMultiplier * voltageCompensation);
+        } else if (hold)
+            motor.setPower(0.1);
+        else
+            motor.setPower(0);
+
+    }
+
+    // VOLTAGE RELATED STUFF
+
+    boolean voltageCompensated = false;
+    double voltageCompensation = 1;
+
+    public void setVoltageCompensated(boolean voltageCompensated) {
+        this.voltageCompensated = voltageCompensated;
+    }
+
+    public double getVoltageCompensation() {
+        if (voltageCompensated)
+            return (12 / voltageSensor.getVoltage());
+        else
+            return 1;
+    }
+
+    // POSITION RELATED STUFF
+
+    boolean positionPIDMode = false;
+    ControllerPID positionPID = new ControllerPID(0, 0, 0);
+
+    public void setPositionPIDMode(boolean positionPIDMode) {
+        this.positionPIDMode = positionPIDMode;
+    }
+
+    public void setPositionPID(double kP, double kI, double kD) {
+        positionPID = new ControllerPID(kP, kI, kD);
+    }
 
     public double targetPosition = 0;
     public double currentPosition = 0;
@@ -58,75 +110,21 @@ public class WrappedMotor {
 
     public double direction = 1;
 
-    /**
-     * Call this method asynchronously to update the lift's motor position.
-     */
-    public void updatePosition() {
-        currentPosition = motor.getCurrentPosition() * encoderDirection;
-
+    double getDirection() {
         if (currentPosition <= targetPosition)
-            direction = 1;
+            return 1;
         else
-            direction = -1;
-
-        if (voltageCompensated)
-            voltageCompensation = 12 / voltageSensor.getVoltage();
-        else
-            voltageCompensation = 1;
-
-
-        if (Math.abs(targetPosition - currentPosition) > tolerance) {
-            if (positionPIDMode)
-                motor.setPower(-positionPID.calculate(currentPosition, targetPosition) * speed * voltageCompensation);
-            else
-                motor.setPower(speed * direction * voltageCompensation);
-        } else if (hold)
-            motor.setPower(0.1);
-        else
-            motor.setPower(0);
-
+            return -1;
     }
-
-    boolean voltageCompensated = false;
-    double voltageCompensation = 1;
-
-    public void setVoltageCompensated(boolean voltageCompensated) {
-        this.voltageCompensated = voltageCompensated;
-    }
-
-    boolean positionPIDMode = false;
-    ControllerPID positionPID = new ControllerPID(0, 0, 0);
-
-    public void setPositionPIDMode(boolean positionPIDMode) {
-        this.positionPIDMode = positionPIDMode;
-    }
-
-    public void setPositionPID(double kP, double kI, double kD) {
-        positionPID = new ControllerPID(kP, kI, kD);
-    }
-
 
     public boolean isBusy() {
-        if (Math.abs(targetPosition - currentPosition) > tolerance)
-            return true;
-        else
-            return false;
+        return (Math.abs(targetPosition - currentPosition) > tolerance);
     }
+
+    // POWER RELATED STUFF
 
     public void setPower(double power) {
         motor.setPower(power);
-    }
-
-    public double encoderDirection = 1;
-
-    public void setEncoderDirection(double encoderDirection) {
-        this.encoderDirection = encoderDirection;
-    }
-
-    double speed = 1;
-
-    public void setSpeed(double speed) {
-        this.speed = speed;
     }
 
     boolean hold = false;
@@ -135,19 +133,39 @@ public class WrappedMotor {
         hold = holdMode;
     }
 
-    public void setPIDMode(boolean isPID) {
-        if (isPID)
+    double speedMultiplier = 1;
+
+    public void setSpeedMultiplier(double speedMultiplier) {
+        this.speedMultiplier = speedMultiplier;
+    }
+
+    //VELOCITY RELATED STUFF
+
+    public void setVelocityPIDFMode(boolean velocityPIDMode) {
+        if (velocityPIDMode)
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         else
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
+    public void setVelocityPIDF(double kP, double kI, double kD, double kF) {
+        motor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
+    }
+
+    //MOTOR UTILITIES STUFF
 
     public void setDirection(boolean isReversed) {
         if (isReversed)
             motor.setDirection(DcMotorSimple.Direction.REVERSE);
         else
             motor.setDirection(DcMotorSimple.Direction.FORWARD);
+    }
+
+    public double encoderDirection = 1;
+
+    @Deprecated
+    public void setEncoderDirection(double encoderDirection) {
+        this.encoderDirection = encoderDirection;
     }
 
     public void setBrakes(boolean brakes) {
