@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode.rasky.opmodes;
 import com.outoftheboxrobotics.photoncore.PhotonCore;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.rasky.components.AntiTipDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.DriveSystem;
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
@@ -16,6 +18,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.Constants;
 import org.firstinspires.ftc.teamcode.rasky.utilities.DrivingMotors;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Gyroscope;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrapperDistanceSensor;
 
 /**
  * The test TeleOP program for testing new features.
@@ -35,6 +38,9 @@ public class TestOpMode extends LinearOpMode {
 
     Gamepad drivingGamepad;
     Gamepad utilityGamepad;
+
+    WrapperDistanceSensor distanceSensorLeft;
+    WrapperDistanceSensor distanceSensorRight;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -58,10 +64,16 @@ public class TestOpMode extends LinearOpMode {
 
         driveSystem = new DriveSystem(motors, drivingGamepad, gyroscope, hardwareMap);
 
+        distanceSensorLeft = new WrapperDistanceSensor(hardwareMap, "sensorLeft");
+        distanceSensorRight = new WrapperDistanceSensor(hardwareMap, "sensorRight");
+
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
+            telemetry.addData("Right Sensor Distance: ", distanceSensorRight.getDistance());
+            telemetry.addData("Right Sensor Distance Avg: ", distanceSensorRight.getAverage());
+            distanceSensorRight.update();
             telemetry.update();
         }
 
@@ -69,7 +81,7 @@ public class TestOpMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         Button driveModeButton = new Button();
-        driveSystem.setAntiTipMode(false);
+        driveSystem.setAntiTipMode(true);
 
         LoopTimeMeasure loopTime = new LoopTimeMeasure(telemetry);
 
@@ -78,6 +90,9 @@ public class TestOpMode extends LinearOpMode {
             driveModeButton.updateButton(drivingGamepad.x);
             driveModeButton.shortPress();
             driveModeButton.longPress();
+
+            driveSystem.setSpeed(liftSystem.getRobotSpeed());
+            driveSystem.setFieldCentricMode(driveModeButton.getLongToggle());
 
             driveSystem.run();
             driveSystem.showInfo(telemetry);
