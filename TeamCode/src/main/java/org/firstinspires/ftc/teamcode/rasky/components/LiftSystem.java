@@ -29,7 +29,8 @@ public class LiftSystem {
         this.hardwareMap = hardwareMap;
     }
 
-    double kP = 0.0075, kI = 0, kD = 0;
+    double kP = 0.0075, kI = 0.002, kD = 0;
+
     /**
      * Call this method before using the object.
      */
@@ -48,36 +49,42 @@ public class LiftSystem {
 
     //Lift positions in encoder ticks
     enum LiftPositions {
-        HIGH_JUNCTION(1415),
-        MEDIUM_JUNCTION(975),
-        LOW_JUNCTION(575),
-        GROUND_JUNCTION(55),
-        STARTING_POS(0);
+        HIGH_JUNCTION(1460, 0.3),
+        MEDIUM_JUNCTION(1000, 0.4),
+        LOW_JUNCTION(600, 0.5),
+        GROUND_JUNCTION(70, 0.6),
+        STARTING_POS(5, 0.6);
 
         double position = 0;
+        double speed = 0;
 
-        LiftPositions(double value) {
+        LiftPositions(double value, double speed) {
             this.position = value;
+            this.speed = speed;
         }
     }
 
     Button resetButton = new Button();
-    Button liftButton = new Button();
-    LiftPositions state;
+    Button liftUpButton = new Button();
+    Button liftDownButton = new Button();
+    LiftPositions state = LiftPositions.STARTING_POS;
     int toggleStates = 0;
 
     public void run() {
         resetButton.updateButton(gamepad.b);
-        liftButton.updateButton(gamepad.y);
+        liftUpButton.updateButton(gamepad.y);
+        liftDownButton.updateButton(gamepad.a);
 
         if (resetButton.press())
             toggleStates = 0;
 
 
-        if (liftButton.toggle())
+        if (liftUpButton.toggle() && toggleStates < 4)
             toggleStates++;
+        else if (liftDownButton.toggle() && toggleStates > 0)
+            toggleStates--;
 
-        switch (toggleStates % 5) {
+        switch (toggleStates) {
             case 1:
                 state = LiftPositions.GROUND_JUNCTION;
                 break;
@@ -97,6 +104,10 @@ public class LiftSystem {
 
         liftMotor.setTargetPosition(state.position);
         liftMotor.updatePosition();
+    }
+
+    public double getRobotSpeed() {
+        return state.speed;
     }
 
     public void showInfo(Telemetry telemetry) {

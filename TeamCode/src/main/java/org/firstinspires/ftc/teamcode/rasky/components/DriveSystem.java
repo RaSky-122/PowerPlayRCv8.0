@@ -104,7 +104,12 @@ public class DriveSystem {
         motors.rightRear.setPower(rightRearPower);
     }
 
-    double speed = 1.0; // Speed Multiplier
+    double speed = 0.75; // Speed Multiplier
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
     final double controllerDeadzone = 0.15; // If the Joystick has a lower value than this one the robot will not move
 
     /**
@@ -119,7 +124,6 @@ public class DriveSystem {
      * -Reverses direction depending on the case
      */
     private void addons() {
-        // Strafe modifications
         if (Math.abs(x) < controllerDeadzone) {
             x = 0;
         }
@@ -157,8 +161,11 @@ public class DriveSystem {
 
         // Rotating the vector of the joystick in a 2D space based on heading offset
         // See this to understand the formulas: https://matthew-brett.github.io/teaching/rotation_2d.html
-        x = x * Math.cos(headingOffset) - y * Math.sin(headingOffset);
-        y = x * Math.sin(headingOffset) + y * Math.cos(headingOffset);
+        double rotatedX = x * Math.cos(headingOffset) - y * Math.sin(headingOffset);
+        double rotatedY = y = x * Math.sin(headingOffset) + y * Math.cos(headingOffset);
+
+        x = rotatedX;
+        y = rotatedY;
     }
 
     /**
@@ -196,6 +203,9 @@ public class DriveSystem {
 
         if (fieldCentricMode) {
             telemetry.addData("Robot Angle: ", gyroscope.getHeading());
+            telemetry.addData("x: ", x);
+            telemetry.addData("y: ", y);
+            telemetry.addData("r: ", r);
         }
 
         if (antiTipMode) {
