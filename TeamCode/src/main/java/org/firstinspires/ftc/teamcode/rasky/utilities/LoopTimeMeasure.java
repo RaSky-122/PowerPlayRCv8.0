@@ -6,6 +6,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * This class measures the average time in ms between each loop.
@@ -25,9 +26,10 @@ public class LoopTimeMeasure {
     double lastTime = 0;
     double timeSum = 0;
     int poolingRate = 50;
+    int size = 0;
 
     ElapsedTime timer = new ElapsedTime();
-    Deque<Double> times = new LinkedList<Double>();
+    Queue<Double> times = new LinkedList<Double>();
 
     /**
      * Call this method every loop to measure the time
@@ -45,9 +47,11 @@ public class LoopTimeMeasure {
 
         //Shows average loop time based on the average of all the times in the pooling rate
         timeSum += timeDiff;
-        times.offerLast(timeDiff);
-        if (times.size() > poolingRate) {
-            timeSum -= times.pop();
+        times.offer(timeDiff);
+        size++;
+        if (size > poolingRate) {
+            size--;
+            timeSum -= times.remove();
             telemetry.addData("Avg Time: ", timeSum / poolingRate);
         }
     }

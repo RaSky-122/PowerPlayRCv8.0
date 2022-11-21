@@ -25,6 +25,9 @@ public class FieldCentricDrive {
     // If the Joystick has a lower value than this one the robot will not move
     final double controllerDeadzone = 0.15;
 
+    double rotatedX = 0;
+    double rotatedY = 0;
+
     public FieldCentricDrive(DrivingMotors motors, Gamepad gamepad, Gyroscope gyroscope) {
         this.motors = motors;
         this.gamepad = gamepad;
@@ -35,7 +38,7 @@ public class FieldCentricDrive {
      * Call this function asynchronously from the while in the OpMode
      */
     public void run() {
-
+        gyroscope.updateOrientation();
         double x = gamepad.left_stick_x; // Strafe, Horizontal Axis
         double y = -gamepad.left_stick_y; // Forward, Vertical Axis (joystick has +/- flipped)
         double r = gamepad.right_stick_x; // Rotation, Horizontal Axis
@@ -43,8 +46,8 @@ public class FieldCentricDrive {
         double neededOffset = -Math.toRadians(gyroscope.getHeading());
 
         // See this to understand the formulas: https://matthew-brett.github.io/teaching/rotation_2d.html
-        double rotatedX = x * Math.cos(neededOffset) - y * Math.sin(neededOffset);
-        double rotatedY = x * Math.sin(neededOffset) + y * Math.cos(neededOffset);
+        rotatedX = x * Math.cos(neededOffset) - y * Math.sin(neededOffset);
+        rotatedY = x * Math.sin(neededOffset) + y * Math.cos(neededOffset);
 
         rotatedX = addons(rotatedX);
         rotatedY = addons(rotatedY);
@@ -86,6 +89,9 @@ public class FieldCentricDrive {
     public void showInfo(Telemetry telemetry) {
         telemetry.addData("Speed Multiplier: ", speed);
         telemetry.addData("Robot Angle: ", gyroscope.getHeading());
+
+        telemetry.addData("rotatedX: ", rotatedX);
+        telemetry.addData("rotatedY: ", rotatedY);
 
         telemetry.addData("LeftRear Position: ", motors.leftRear.getCurrentPosition());
         telemetry.addData("RightRear Position: ", motors.rightRear.getCurrentPosition());

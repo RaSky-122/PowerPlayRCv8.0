@@ -81,7 +81,7 @@ public class MainDrivingOp extends LinearOpMode {
                 //robotCentricDrive.showInfo(telemetry);
             } else {
                 fieldCentricDrive.run();
-                //fieldCentricDrive.showInfo(telemetry);
+                fieldCentricDrive.showInfo(telemetry);
             }
 
             liftSystem.run();

@@ -22,10 +22,8 @@ public class WrappedServo {
     boolean continuousMode = false;
     boolean isReversed = false;
 
-    public WrappedServo(HardwareMap hardwareMap, double minPWM, double maxPWM) {
+    public WrappedServo(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
-        normalServo.setPwmRange(new PwmControl.PwmRange(minPWM, maxPWM));
-        continuousServo.setPwmRange(new PwmControl.PwmRange(minPWM, maxPWM));
     }
 
     /**
@@ -43,6 +41,20 @@ public class WrappedServo {
             normalServo = hardwareMap.get(ServoImplEx.class, name);
 
         setReversed(isReversed);
+    }
+
+    /**
+     * Set the minimum and maximum PWM signals the servo can receive.
+     *
+     * @param minPWM Minimum PWM value
+     * @param maxPWM Maximum PWM value
+     */
+    public void setPWMRange(double minPWM, double maxPWM) {
+
+        if (continuousMode)
+            continuousServo.setPwmRange(new PwmControl.PwmRange(minPWM, maxPWM));
+        else
+            normalServo.setPwmRange(new PwmControl.PwmRange(minPWM, maxPWM));
     }
 
     public void setPosition(double position) {
