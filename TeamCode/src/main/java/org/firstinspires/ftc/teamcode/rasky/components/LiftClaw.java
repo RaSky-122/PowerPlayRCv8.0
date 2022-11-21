@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedServo;
  * Lift claw mechanism.
  * <p>
  * !! CALL INIT() METHOD BEFORE USING !!
+ *
  * @author Lucian
  * @version 1.1
  */
@@ -28,8 +29,9 @@ public class LiftClaw {
      * Call this method before using the claw.
      */
     public void Init() {
-        clawServo = new WrappedServo(hardwareMap, 500, 2500);
+        clawServo = new WrappedServo(hardwareMap);
         clawServo.Init("claw", false, true);
+        clawServo.setPWMRange(500, 2500);
     }
 
     enum ClawModes {
