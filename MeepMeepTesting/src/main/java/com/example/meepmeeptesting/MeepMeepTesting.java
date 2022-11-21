@@ -2,6 +2,7 @@ package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.drive.Drive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.DriveShim;
@@ -16,15 +17,25 @@ public class MeepMeepTesting {
                 .setStartPose(new Pose2d(35.5, -62, Math.toRadians(90)))
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
+                .setDimensions(11.08, 14.05)
                 .build();
 
         DriveShim drive = myBot.getDrive();
-        myBot.followTrajectorySequence(drive.trajectorySequenceBuilder(myBot.getPose())
-                .forward(20)
-                .waitSeconds(2)
-                .back(20)
-                .waitSeconds(2)
-                .build());
+
+        TrajectorySequence startTraj = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+                .forward(55)
+                .back(3)
+                .turn(Math.toRadians(45))
+                .build();
+
+        TrajectorySequence cycleTrajectory = drive.trajectorySequenceBuilder(startTraj.end())
+                .forward(9)
+                .lineToLinearHeading(new Pose2d(startTraj.end().getX(), startTraj.end().getY() - 1.75, Math.toRadians(0)))
+                .forward(25)
+                .build();
+
+        myBot.followTrajectorySequence(startTraj);
+        myBot.followTrajectorySequence(cycleTrajectory);
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_POWERPLAY_OFFICIAL)
                 .setDarkMode(true)
