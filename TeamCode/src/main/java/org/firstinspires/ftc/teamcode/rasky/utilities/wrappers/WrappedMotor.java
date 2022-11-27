@@ -55,14 +55,18 @@ public class WrappedMotor {
         double PIDValue = positionPID.calculate(currentPosition, targetPosition);
 
         if (this.isBusy()) {
-            if (positionPIDMode)
-                motor.setPower(-PIDValue * speedMultiplier * voltageCompensation);
-            else
-                motor.setPower(direction * speedMultiplier * voltageCompensation);
-        } else if (hold)
-            motor.setPower(0.1);
-        else
-            motor.setPower(0);
+            if (positionPIDMode) {
+                double tempPower = -PIDValue * speedMultiplier * voltageCompensation + gravityCounter;
+                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(-PIDValue) * 0.3;
+                motor.setPower(tempPower);
+            }
+            else {
+                double tempPower = direction * speedMultiplier * voltageCompensation + gravityCounter;
+                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(direction) * 0.3;
+                motor.setPower(tempPower);
+            }
+        } else
+            motor.setPower(0 + gravityCounter);
 
     }
 
@@ -128,6 +132,7 @@ public class WrappedMotor {
     }
 
     boolean hold = false;
+    double gravityCounter = 0.1;
 
     public void holdMode(boolean holdMode) {
         hold = holdMode;

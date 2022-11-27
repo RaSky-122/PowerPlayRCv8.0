@@ -29,7 +29,7 @@ public class LiftSystem {
         this.hardwareMap = hardwareMap;
     }
 
-    double kP = 0.0075, kI = 0.002, kD = 0;
+    double kP = 0.005, kI = 0, kD = 0.0001;
 
     /**
      * Call this method before using the object.

@@ -34,11 +34,11 @@ public class LiftClaw {
         clawServo.setPWMRange(500, 2500);
     }
 
-    enum ClawModes {
-        CLOSED(0.35),
-        OPEN(0.65);
+    public enum ClawModes {
+        CLOSED(0.15),
+        OPEN(0.5);
 
-        double position = 0;
+        public double position = 0;
 
         ClawModes(double value) {
             this.position = value;
