@@ -15,12 +15,12 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
  * @author Lucian
  * @version 2.0
  */
-public class WrappedMotor {
+public class WrappedMotor2 {
     public DcMotorEx motor;
     HardwareMap hardwareMap;
     VoltageSensor voltageSensor;
 
-    public WrappedMotor(HardwareMap hardwareMap) {
+    public WrappedMotor2(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
     }
 
@@ -39,8 +39,11 @@ public class WrappedMotor {
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         this.setDirection(isReversed);
-        this.setPositionPIDMode(positionPIDMode);
-        this.setVelocityPIDFMode(velocityPIDFMode);
+//        this.setPositionPIDMode(positionPIDMode);
+//        this.setVelocityPIDFMode(velocityPIDFMode);
+        motor.setTargetPosition(0);
+        motor.setTargetPositionTolerance(10);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         this.setBrakes(brakes);
     }
 
@@ -48,25 +51,10 @@ public class WrappedMotor {
      * Call this method asynchronously to update the lift's motor position.
      */
     public void updatePosition() {
-        currentPosition = motor.getCurrentPosition() * encoderDirection;
-
-        direction = getDirection();
-        voltageCompensation = getVoltageCompensation();
-        double PIDValue = positionPID.calculate(currentPosition, targetPosition);
-
-        if (this.isBusy()) {
-            if (positionPIDMode) {
-                double tempPower = -PIDValue * speedMultiplier * voltageCompensation + gravityCounter;
-                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(-PIDValue) * 0.3;
-                motor.setPower(tempPower);
-            } else {
-                double tempPower = direction * speedMultiplier * voltageCompensation + gravityCounter;
-                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(direction) * 0.3;
-                motor.setPower(tempPower);
-            }
-        } else
-            motor.setPower(0 + gravityCounter);
-
+        if (motor.isBusy())
+            motor.setPower(1);
+        else
+            motor.setPower(0.1);
     }
 
     // VOLTAGE RELATED STUFF
@@ -102,7 +90,7 @@ public class WrappedMotor {
     public double currentPosition = 0;
 
     public void setTargetPosition(double targetPosition) {
-        this.targetPosition = targetPosition;
+        motor.setTargetPosition((int) targetPosition);
     }
 
     double tolerance = 0;

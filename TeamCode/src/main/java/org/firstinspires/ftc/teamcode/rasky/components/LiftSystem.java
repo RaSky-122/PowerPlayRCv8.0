@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.rasky.components;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor;
+import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor2;
 
 /**
  * The class that operates the lift.
@@ -19,7 +21,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor;
 public class LiftSystem {
     Gamepad gamepad;
     HardwareMap hardwareMap;
-    public WrappedMotor liftMotor;
+    public WrappedMotor2 liftMotor;
 
     double tolerance = 10;
     double speed = 1;
@@ -35,7 +37,7 @@ public class LiftSystem {
      * Call this method before using the object.
      */
     public void Init() {
-        liftMotor = new WrappedMotor(hardwareMap);
+        liftMotor = new WrappedMotor2(hardwareMap);
         liftMotor.Init("liftMotor", true, false, true, true);
 
         liftMotor.setPositionPIDMode(true);
@@ -48,15 +50,15 @@ public class LiftSystem {
     }
 
     //Lift positions in encoder ticks
-    enum LiftPositions {
-        HIGH_JUNCTION(1460, 0.3),
-        MEDIUM_JUNCTION(1000, 0.4),
-        LOW_JUNCTION(600, 0.5),
-        GROUND_JUNCTION(70, 0.6),
-        STARTING_POS(5, 0.6);
+    public enum LiftPositions {
+        HIGH_JUNCTION(1460, 0.5),
+        MEDIUM_JUNCTION(1000, 0.6),
+        LOW_JUNCTION(600, 0.7),
+        GROUND_JUNCTION(70, 0.85),
+        STARTING_POS(5, 0.85);
 
-        double position = 0;
-        double speed = 0;
+        public double position = 0;
+        public double speed = 0;
 
         LiftPositions(double value, double speed) {
             this.position = value;
@@ -67,22 +69,37 @@ public class LiftSystem {
     Button resetButton = new Button();
     Button liftUpButton = new Button();
     Button liftDownButton = new Button();
+    Button manualButton = new Button();
     LiftPositions state = LiftPositions.STARTING_POS;
     int toggleStates = 0;
+    boolean manualMode = false;
 
     public void run() {
         resetButton.updateButton(gamepad.b);
         liftUpButton.updateButton(gamepad.y);
         liftDownButton.updateButton(gamepad.a);
+        manualButton.updateButton(gamepad.left_bumper);
 
         if (resetButton.press())
             toggleStates = 0;
 
+        if (manualButton.toggle()) {
+            if (!manualMode) {
+                manualMode = true;
+                liftMotor.motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            } else if (manualMode) {
+                manualMode = false;
+                liftMotor.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+        }
 
-        if (liftUpButton.toggle() && toggleStates < 4)
+        if (liftUpButton.toggle() && toggleStates < 4 && !manualMode) {
             toggleStates++;
-        else if (liftDownButton.toggle() && toggleStates > 0)
+        }
+
+        if (liftDownButton.toggle() && toggleStates > 0 && !manualMode) {
             toggleStates--;
+        }
 
         switch (toggleStates) {
             case 1:
@@ -102,8 +119,18 @@ public class LiftSystem {
                 break;
         }
 
-        liftMotor.setTargetPosition(state.position);
-        liftMotor.updatePosition();
+        if (manualMode && liftDownButton.press())
+            liftMotor.setPower(-0.5);
+        else if (manualMode && liftUpButton.press())
+            liftMotor.setPower(0.6);
+        else if (manualMode)
+            liftMotor.setPower(0.1);
+
+        if (!manualMode) {
+            liftMotor.setTargetPosition(state.position);
+            liftMotor.updatePosition();
+        }
+
     }
 
     public double getRobotSpeed() {
@@ -113,12 +140,16 @@ public class LiftSystem {
     public void showInfo(Telemetry telemetry) {
         telemetry.addData("Lift NrState: ", toggleStates);
         telemetry.addData("Lift State: ", state);
+        telemetry.addData("Manual Mode: ", manualMode);
+        telemetry.addData("Motor Mode: ", liftMotor.motor.getMode());
 
         telemetry.addData("Lift TargetPos: ", liftMotor.targetPosition);
         telemetry.addData("Lift Current Position: ", liftMotor.currentPosition);
 
         telemetry.addData("Motor Power: ", liftMotor.motor.getPower());
         telemetry.addData("Lift Encoder: ", liftMotor.motor.getCurrentPosition());
+        telemetry.addData("Is Busy: ", liftMotor.motor.isBusy());
+        telemetry.addData("Lift PIDF: ", liftMotor.motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
 
         telemetry.addData("Position Tolerance: ", tolerance);
         telemetry.addData("Motor Direction: ", liftMotor.direction);

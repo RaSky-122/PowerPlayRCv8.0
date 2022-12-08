@@ -35,8 +35,8 @@ public class LiftClaw {
     }
 
     public enum ClawModes {
-        CLOSED(0.15),
-        OPEN(0.5);
+        CLOSED(0),
+        OPEN(0.5 );
 
         public double position = 0;
 

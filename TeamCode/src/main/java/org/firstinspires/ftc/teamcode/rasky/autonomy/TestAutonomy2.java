@@ -27,8 +27,8 @@ import org.openftc.apriltag.AprilTagDetection;
  * @author Lucian
  * @version 1.0
  */
-@Autonomous(name = "Test Autonomy", group = "tests")
-public class TestAutonomy extends LinearOpMode {
+@Autonomous(name = "Test Autonomy 2", group = "tests")
+public class TestAutonomy2 extends LinearOpMode {
 
     AutonomyDetection detectionSystem;
     WrappedMotor2 liftMotor;
@@ -62,44 +62,71 @@ public class TestAutonomy extends LinearOpMode {
         clawServo.setPWMRange(500, 2500);
         clawServo.setPosition(LiftClaw.ClawModes.CLOSED.position);
 
-        TrajectorySequence startTraj = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                .forward(54.25)
-                .back(3)
-                .turn(Math.toRadians(45))
-                .build();
-
         TrajectoryVelocityConstraint velCon = SampleMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL / 5, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH);
         TrajectoryVelocityConstraint angCon = SampleMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL * 1.5, DriveConstants.TRACK_WIDTH);
 
-        TrajectorySequence scoreTraj = drive.trajectorySequenceBuilder(startTraj.end())
+        TrajectorySequence startTraj = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+                .forward(56.25)
                 .addTemporalMarker(() -> {
                     liftMotor.setTargetPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.position);
                 })
-                .setVelConstraint(velCon)
-                .forward(9.5)
-                .resetVelConstraint()
-                .waitSeconds(0.3)
+                .strafeLeft(11.6)
+                .waitSeconds(0.2)
                 .addTemporalMarker(() -> {
                     clawServo.setPosition(LiftClaw.ClawModes.OPEN.position);
                 })
-                .waitSeconds(0.3)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(0);
-                })
-                .back(5)
+                .waitSeconds(0.2)
                 .build();
 
-        TrajectorySequence cycleTrajectory = drive.trajectorySequenceBuilder(scoreTraj.end())
-                .setVelConstraint(angCon)
-                .lineToLinearHeading(new Pose2d(startTraj.end().getX(), startTraj.end().getY() - 1.75, Math.toRadians(-90)))
-                .forward(22.3)
-                .waitSeconds(0.3)
+        TrajectorySequence collectTraj = drive.trajectorySequenceBuilder(startTraj.end())
+                .back(4.2)
+                .addTemporalMarker(() -> {
+                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.STARTING_POS.position);
+                })
+                .turn(Math.toRadians(-90))
+                .forward(37.6)
                 .addTemporalMarker(() -> {
                     clawServo.setPosition(LiftClaw.ClawModes.CLOSED.position);
                 })
-                .waitSeconds(0.5)
-                .lineToLinearHeading(startTraj.end())
-                .resetVelConstraint()
+                .waitSeconds(0.05)
+                .addTemporalMarker(() -> {
+                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.LOW_JUNCTION.position);
+                })
+                .waitSeconds(0.25)
+                .build();
+
+        TrajectorySequence travelTraj = drive.trajectorySequenceBuilder(collectTraj.end())
+                .back(37.6)
+                .addTemporalMarker(() -> {
+                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.position);
+                })
+                .turn(Math.toRadians(90))
+                .forward(4.2)
+                .waitSeconds(0.2)
+                .addTemporalMarker(() -> {
+                    clawServo.setPosition(LiftClaw.ClawModes.OPEN.position);
+                })
+                .waitSeconds(0.2)
+                .build();
+
+
+        TrajectorySequence prePark = drive.trajectorySequenceBuilder(startTraj.end())
+                .back(4.5)
+                .addTemporalMarker(() -> {
+                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.STARTING_POS.position);
+                })
+                .build();
+
+        TrajectorySequence parkZoneOne = drive.trajectorySequenceBuilder(prePark.end())
+                .strafeLeft(10)
+                .build();
+
+        TrajectorySequence parkZoneTwo = drive.trajectorySequenceBuilder(prePark.end())
+                .strafeRight(10)
+                .build();
+
+        TrajectorySequence parkZoneThree = drive.trajectorySequenceBuilder(prePark.end())
+                .strafeRight(35)
                 .build();
 
         AprilTagDetection detectedTag = null;
@@ -112,44 +139,56 @@ public class TestAutonomy extends LinearOpMode {
             telemetry.update();
         }
 
-
-
         detectionSystem.closeCamera();
 
-        drive.followTrajectorySequence(startTraj);
+        drive.followTrajectorySequenceAsync(startTraj);
 
-        drive.followTrajectorySequenceAsync(scoreTraj);
         while (drive.isBusy()) {
-            liftMotor.updatePosition();
             drive.update();
+            liftMotor.updatePosition();
         }
 
-        drive.followTrajectorySequenceAsync(cycleTrajectory);
+        drive.followTrajectorySequenceAsync(collectTraj);
+
         while (drive.isBusy()) {
-            liftMotor.updatePosition();
             drive.update();
+            liftMotor.updatePosition();
         }
 
-        drive.followTrajectorySequenceAsync(scoreTraj);
+        drive.followTrajectorySequenceAsync(travelTraj);
+
         while (drive.isBusy()) {
-            liftMotor.updatePosition();
             drive.update();
+            liftMotor.updatePosition();
         }
 
-        drive.followTrajectorySequenceAsync(cycleTrajectory);
+        drive.followTrajectorySequenceAsync(collectTraj);
+
         while (drive.isBusy()) {
-            liftMotor.updatePosition();
             drive.update();
+            liftMotor.updatePosition();
         }
 
-        drive.followTrajectorySequenceAsync(scoreTraj);
+        drive.followTrajectorySequenceAsync(travelTraj);
+
         while (drive.isBusy()) {
-            liftMotor.updatePosition();
             drive.update();
+            liftMotor.updatePosition();
         }
 
-        sleep(1000);
+        drive.followTrajectorySequenceAsync(prePark);
 
+        while (drive.isBusy()) {
+            drive.update();
+            liftMotor.updatePosition();
+        }
+
+        drive.followTrajectorySequenceAsync(parkZoneThree);
+
+        while (drive.isBusy()) {
+            drive.update();
+            liftMotor.updatePosition();
+        }
 
         return;
     }

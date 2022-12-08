@@ -62,6 +62,11 @@ public class AutonomyDetection {
         });
     }
 
+    public void closeCamera() {
+        camera.stopStreaming();
+        camera.pauseViewport();
+    }
+
     /**
      * This method returns the first April Tag detected on the camera's view.
      *
