@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.rasky.components.AntiTipDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.DriveSystem;
 import org.firstinspires.ftc.teamcode.rasky.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftClaw;
+import org.firstinspires.ftc.teamcode.rasky.components.LiftNewClaw;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
 import org.firstinspires.ftc.teamcode.rasky.learning.TestClass;
 import org.firstinspires.ftc.teamcode.rasky.utilities.LoopTimeMeasure;
@@ -36,13 +37,13 @@ public class TestOpMode extends LinearOpMode {
 
     DriveSystem driveSystem;
     LiftSystem liftSystem;
-    LiftClaw liftClaw;
+    LiftNewClaw liftNewClaw;
 
     Gamepad drivingGamepad;
     Gamepad utilityGamepad;
 
-    WrapperDistanceSensor distanceSensorLeft;
-    WrapperDistanceSensor distanceSensorRight;
+    //WrapperDistanceSensor distanceSensorLeft;
+    //WrapperDistanceSensor distanceSensorRight;
 
     Gamepad.RumbleEffect endgameRumble;
 
@@ -64,16 +65,16 @@ public class TestOpMode extends LinearOpMode {
         liftSystem = new LiftSystem(hardwareMap, utilityGamepad);
         liftSystem.Init();
 
-        liftClaw = new LiftClaw(hardwareMap, utilityGamepad);
-        liftClaw.Init();
+        liftNewClaw = new LiftNewClaw(hardwareMap, utilityGamepad);
+        liftNewClaw.Init();
 
         gyroscope = new Gyroscope(hardwareMap);
         gyroscope.Init();
 
         driveSystem = new DriveSystem(motors, drivingGamepad, gyroscope, hardwareMap);
 
-        distanceSensorLeft = new WrapperDistanceSensor(hardwareMap, "sensorLeft");
-        distanceSensorRight = new WrapperDistanceSensor(hardwareMap, "sensorRight");
+        //distanceSensorLeft = new WrapperDistanceSensor(hardwareMap, "sensorLeft");
+        // distanceSensorRight = new WrapperDistanceSensor(hardwareMap, "sensorRight");
 
         //This while loop will run after initialization until the program starts or until stop
         //is pressed
@@ -89,7 +90,7 @@ public class TestOpMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         Button driveModeButton = new Button();
-        driveSystem.setAntiTipMode(true);
+        driveSystem.setAntiTipMode(false);
 
         LoopTimeMeasure loopTime = new LoopTimeMeasure(telemetry);
 
@@ -112,12 +113,17 @@ public class TestOpMode extends LinearOpMode {
             //driveSystem.showInfo(telemetry);
 
             liftSystem.run();
+            liftSystem.resetLift(true);
             liftSystem.showInfo(telemetry);
 
-            liftClaw.run();
-            //liftClaw.showInfo(telemetry);
+            if (liftSystem.isStackMode())
+                liftNewClaw.setAxlePos(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+            else
+                liftNewClaw.setAxlePos(liftSystem.getAxleTarget());
+            liftNewClaw.run();
+            //liftNewClaw.showInfo(telemetry);
 
-            loopTime.measure();
+            //loopTime.measure();
 
             telemetry.addData("OpMode Seconds: ", opModeTimer.seconds());
             telemetry.update();

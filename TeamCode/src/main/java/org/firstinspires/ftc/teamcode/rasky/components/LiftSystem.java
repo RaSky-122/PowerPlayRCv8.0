@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.rasky.components;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.Button;
@@ -21,10 +26,10 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor2;
 public class LiftSystem {
     Gamepad gamepad;
     HardwareMap hardwareMap;
-    public WrappedMotor2 liftMotor;
+    public WrappedMotor liftMotor;
 
-    double tolerance = 10;
-    double speed = 1;
+    double tolerance = 15;
+    double speed = 0.8;
 
     public LiftSystem(HardwareMap hardwareMap, Gamepad gamepad) {
         this.gamepad = gamepad;
@@ -37,32 +42,35 @@ public class LiftSystem {
      * Call this method before using the object.
      */
     public void Init() {
-        liftMotor = new WrappedMotor2(hardwareMap);
-        liftMotor.Init("liftMotor", true, false, true, true);
+        liftMotor = new WrappedMotor(hardwareMap);
+        liftMotor.Init("liftMotor", "liftMotor2", false, false, true, false);
 
         liftMotor.setPositionPIDMode(true);
         liftMotor.setPositionPID(kP, kI, kD);
 
         liftMotor.setTolerance(tolerance);
         liftMotor.setSpeedMultiplier(speed);
+
         liftMotor.setEncoderDirection(1);
         liftMotor.holdMode(true);
     }
 
     //Lift positions in encoder ticks
     public enum LiftPositions {
-        HIGH_JUNCTION(1460, 0.5),
-        MEDIUM_JUNCTION(1000, 0.6),
-        LOW_JUNCTION(600, 0.7),
-        GROUND_JUNCTION(70, 0.85),
-        STARTING_POS(5, 0.85);
+        HIGH_JUNCTION(1585, 0.6, 0),
+        MEDIUM_JUNCTION(915, 0.7, 0),
+        LOW_JUNCTION(125, 0.8, 0.49),
+        GROUND_JUNCTION(0, 0.85, 0.77),
+        STARTING_POS(0, 0.85, 0.82);
 
         public double position = 0;
         public double speed = 0;
+        public double axlePos = 0;
 
-        LiftPositions(double value, double speed) {
+        LiftPositions(double value, double speed, double axlePos) {
             this.position = value;
             this.speed = speed;
+            this.axlePos = axlePos;
         }
     }
 
@@ -70,35 +78,58 @@ public class LiftSystem {
     Button liftUpButton = new Button();
     Button liftDownButton = new Button();
     Button manualButton = new Button();
+    Button stackButton = new Button();
+    double stackHeight = 380;
+    double oldStackHeight = 380;
+
     LiftPositions state = LiftPositions.STARTING_POS;
     int toggleStates = 0;
     boolean manualMode = false;
+    boolean stackMode = false;
 
     public void run() {
         resetButton.updateButton(gamepad.b);
         liftUpButton.updateButton(gamepad.y);
         liftDownButton.updateButton(gamepad.a);
         manualButton.updateButton(gamepad.left_bumper);
-
-        if (resetButton.press())
-            toggleStates = 0;
+        stackButton.updateButton(gamepad.right_bumper);
 
         if (manualButton.toggle()) {
             if (!manualMode) {
+                stackMode = false;
                 manualMode = true;
-                liftMotor.motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             } else if (manualMode) {
                 manualMode = false;
-                liftMotor.motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                stackMode = false;
+                liftMotor.resetPID();
             }
         }
 
-        if (liftUpButton.toggle() && toggleStates < 4 && !manualMode) {
-            toggleStates++;
+        if (stackButton.toggle()) {
+            if (stackMode == false) {
+                stackMode = true;
+                stackHeight = oldStackHeight;
+            } else {
+                stackMode = false;
+                toggleStates = 2;
+            }
+            manualMode = false;
         }
 
-        if (liftDownButton.toggle() && toggleStates > 0 && !manualMode) {
-            toggleStates--;
+        if (liftUpButton.toggle() && !manualMode) {
+            if (stackMode) {
+                if (stackHeight < 380)
+                    stackHeight += 80;
+            } else if (toggleStates < 4)
+                toggleStates++;
+        }
+
+        if (liftDownButton.toggle() && !manualMode) {
+            if (stackMode) {
+                if (stackHeight > 60)
+                    stackHeight -= 80;
+            } else if (toggleStates > 0)
+                toggleStates--;
         }
 
         switch (toggleStates) {
@@ -119,18 +150,43 @@ public class LiftSystem {
                 break;
         }
 
-        if (manualMode && liftDownButton.press())
-            liftMotor.setPower(-0.5);
-        else if (manualMode && liftUpButton.press())
-            liftMotor.setPower(0.6);
-        else if (manualMode)
-            liftMotor.setPower(0.1);
+        if (manualMode) {
+            if (liftDownButton.press())
+                liftMotor.setPower(-0.7);
+            else if (liftUpButton.press())
+                liftMotor.setPower(0.9);
+            else if (manualMode)
+                liftMotor.setPower(0.15);
 
-        if (!manualMode) {
-            liftMotor.setTargetPosition(state.position);
-            liftMotor.updatePosition();
+            liftMotor.setTargetPosition(liftMotor.motor.getCurrentPosition());
         }
 
+
+        if (!manualMode) {
+            if (!stackMode)
+                liftMotor.setTargetPosition(state.position);
+            else
+                liftMotor.setTargetPosition(stackHeight);
+            liftMotor.updatePosition();
+        }
+    }
+
+    public double getAxleTarget() {
+        return state.axlePos;
+    }
+
+    public void resetLift(boolean able) {
+        if (resetButton.press() && able) {
+            toggleStates = 0;
+            if (stackMode && stackHeight < 850) {
+                oldStackHeight = stackHeight;
+                stackHeight = 850;
+            }
+        }
+    }
+
+    public boolean isStackMode() {
+        return stackMode;
     }
 
     public double getRobotSpeed() {
@@ -141,15 +197,19 @@ public class LiftSystem {
         telemetry.addData("Lift NrState: ", toggleStates);
         telemetry.addData("Lift State: ", state);
         telemetry.addData("Manual Mode: ", manualMode);
+        telemetry.addData("Stack Mode: ", stackMode);
+        telemetry.addData("Stack Height: ", stackHeight);
         telemetry.addData("Motor Mode: ", liftMotor.motor.getMode());
 
         telemetry.addData("Lift TargetPos: ", liftMotor.targetPosition);
         telemetry.addData("Lift Current Position: ", liftMotor.currentPosition);
 
         telemetry.addData("Motor Power: ", liftMotor.motor.getPower());
+        telemetry.addData("Motor Direction: ", liftMotor.motor.getDirection());
         telemetry.addData("Lift Encoder: ", liftMotor.motor.getCurrentPosition());
-        telemetry.addData("Is Busy: ", liftMotor.motor.isBusy());
-        telemetry.addData("Lift PIDF: ", liftMotor.motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
+        telemetry.addData("Motor Vel: ", liftMotor.motor.getVelocity());
+        telemetry.addData("PID Pos: ", liftMotor.calcPos);
+        telemetry.addData("PID Pow: ", liftMotor.power);
 
         telemetry.addData("Position Tolerance: ", tolerance);
         telemetry.addData("Motor Direction: ", liftMotor.direction);

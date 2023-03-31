@@ -2,15 +2,24 @@ package org.firstinspires.ftc.teamcode.rasky.autonomy;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.profile.VelocityConstraint;
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.rasky.components.LiftClaw;
+import org.firstinspires.ftc.teamcode.rasky.components.LiftNewClaw;
 import org.firstinspires.ftc.teamcode.rasky.components.LiftSystem;
 import org.firstinspires.ftc.teamcode.rasky.detection.AutonomyDetection;
 import org.firstinspires.ftc.teamcode.rasky.utilities.wrappers.WrappedMotor;
@@ -27,113 +36,123 @@ import org.openftc.apriltag.AprilTagDetection;
  * @author Lucian
  * @version 1.0
  */
-@Autonomous(name = "Test Autonomy 2", group = "tests")
+@Autonomous(name = "Test Autonomy2", group = "tests")
 public class TestAutonomy2 extends LinearOpMode {
 
     AutonomyDetection detectionSystem;
-    WrappedMotor2 liftMotor;
-    WrappedServo clawServo;
+    WrappedServo servoClaw;
+    WrappedServo servoJoint;
+    //adaugat de raca , nu te speria
+    WrappedServo servoAxle;
+    ElapsedTime timer = new ElapsedTime();
+
+    DcMotorEx liftMotor;
+    DcMotorEx liftMotor2;
+
+    PIDFController controller;
+    double p = 0.009, i = 0, d = 0.001;
+    double f = 0.15;
+
+    int target = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        drive.setPoseEstimate(new Pose2d(0, 0, 0));
+        drive.setPoseEstimate(new Pose2d(30, -62, Math.toRadians(90)));
 
         detectionSystem = new AutonomyDetection(hardwareMap);
         detectionSystem.init();
 
-        liftMotor = new WrappedMotor2(hardwareMap);
-        liftMotor.Init("liftMotor", true, false, true, true);
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        liftMotor2 = hardwareMap.get(DcMotorEx.class, "liftMotor2");
+        liftMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        double kP = 0.005, kI = 0, kD = 0.0001;
-        double tolerance = 10;
-        double speed = 1;
+        controller = new PIDFController(new PIDCoefficients(p, i, d));
 
-        liftMotor.setPositionPIDMode(true);
-        liftMotor.setPositionPID(kP, kI, kD);
+        servoClaw = new WrappedServo(hardwareMap);
+        servoClaw.Init("claw", false, true);
+        servoClaw.setPWMRange(500, 2500);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.CLOSED.position);
 
-        liftMotor.setTolerance(tolerance);
-        liftMotor.setSpeedMultiplier(speed);
-        liftMotor.setEncoderDirection(1);
-        liftMotor.holdMode(true);
+        servoJoint = new WrappedServo(hardwareMap);
+        servoJoint.Init("joint", false, false);
+        servoJoint.setPWMRange(500, 2500);
+        servoJoint.setPosition(LiftNewClaw.JointModes.FRONT.position);
 
-        clawServo = new WrappedServo(hardwareMap);
-        clawServo.Init("claw", false, true);
-        clawServo.setPWMRange(500, 2500);
-        clawServo.setPosition(LiftClaw.ClawModes.CLOSED.position);
+        servoAxle = new WrappedServo(hardwareMap);
+        servoAxle.Init("axle", false, true);
+        servoAxle.setPWMRange(500, 2500);
 
-        TrajectoryVelocityConstraint velCon = SampleMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL / 5, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH);
-        TrajectoryVelocityConstraint angCon = SampleMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL * 1.5, DriveConstants.TRACK_WIDTH);
 
         TrajectorySequence startTraj = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                .forward(56.25)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.position);
-                })
-                .strafeLeft(11.6)
-                .waitSeconds(0.2)
-                .addTemporalMarker(() -> {
-                    clawServo.setPosition(LiftClaw.ClawModes.OPEN.position);
-                })
-                .waitSeconds(0.2)
+                .lineToLinearHeading(new Pose2d(32, -54.5, Math.toRadians(125)))
                 .build();
 
-        TrajectorySequence collectTraj = drive.trajectorySequenceBuilder(startTraj.end())
-                .back(4.2)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.STARTING_POS.position);
-                })
-                .turn(Math.toRadians(-90))
-                .forward(37.6)
-                .addTemporalMarker(() -> {
-                    clawServo.setPosition(LiftClaw.ClawModes.CLOSED.position);
-                })
-                .waitSeconds(0.05)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.LOW_JUNCTION.position);
-                })
-                .waitSeconds(0.25)
+        TrajectorySequence twoTraj = drive.trajectorySequenceBuilder(startTraj.end())
+                .strafeRight(5)
+                .lineToLinearHeading(new Pose2d(35, -8.75, Math.toRadians(0)))
                 .build();
 
-        TrajectorySequence travelTraj = drive.trajectorySequenceBuilder(collectTraj.end())
-                .back(37.6)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.position);
+        TrajectorySequence threeTraj = drive.trajectorySequenceBuilder(twoTraj.end())
+                .lineToConstantHeading(new Vector2d(60, -9))
+                .build();
+
+        TrajectorySequence fourTraj = drive.trajectorySequenceBuilder(threeTraj.end())
+                .addTemporalMarker(0.3, () -> {
+                    servoJoint.setPosition(LiftNewClaw.JointModes.BACK.position);
                 })
-                .turn(Math.toRadians(90))
-                .forward(4.2)
-                .waitSeconds(0.2)
-                .addTemporalMarker(() -> {
-                    clawServo.setPosition(LiftClaw.ClawModes.OPEN.position);
+                .lineToLinearHeading(new Pose2d(28.5, -8, Math.toRadians(-60)))
+                .build();
+
+        TrajectorySequence fiveTraj = drive.trajectorySequenceBuilder(fourTraj.end())
+                .lineToLinearHeading(new Pose2d(59.8, -10, Math.toRadians(0)))
+                .build();
+
+        TrajectorySequence sixTraj = drive.trajectorySequenceBuilder(fiveTraj.end())
+                .addTemporalMarker(0.3, () -> {
+                    servoJoint.setPosition(LiftNewClaw.JointModes.BACK.position);
                 })
-                .waitSeconds(0.2)
+                .lineToLinearHeading(new Pose2d(28.7, -8.5, Math.toRadians(-60)))
                 .build();
 
+        TrajectorySequence sevenTraj = drive.trajectorySequenceBuilder(sixTraj.end())
+                .lineToLinearHeading(new Pose2d(59.8, -10, Math.toRadians(0)))
+                .build();
 
-        TrajectorySequence prePark = drive.trajectorySequenceBuilder(startTraj.end())
-                .back(4.5)
-                .addTemporalMarker(() -> {
-                    liftMotor.setTargetPosition(LiftSystem.LiftPositions.STARTING_POS.position);
+        TrajectorySequence eightTraj = drive.trajectorySequenceBuilder(fiveTraj.end())
+                .addTemporalMarker(0.3, () -> {
+                    servoJoint.setPosition(LiftNewClaw.JointModes.BACK.position);
                 })
+                .lineToLinearHeading(new Pose2d(28.7, -9.5, Math.toRadians(-60)))
                 .build();
 
-        TrajectorySequence parkZoneOne = drive.trajectorySequenceBuilder(prePark.end())
-                .strafeLeft(10)
+        TrajectorySequence nineTraj = drive.trajectorySequenceBuilder(sixTraj.end())
+                .lineToLinearHeading(new Pose2d(59.8, -10, Math.toRadians(0)))
                 .build();
 
-        TrajectorySequence parkZoneTwo = drive.trajectorySequenceBuilder(prePark.end())
-                .strafeRight(10)
+        TrajectorySequence tenTraj = drive.trajectorySequenceBuilder(fiveTraj.end())
+                .addTemporalMarker(0.3, () -> {
+                    servoJoint.setPosition(LiftNewClaw.JointModes.BACK.position);
+                })
+                .lineToLinearHeading(new Pose2d(28.7, -10, Math.toRadians(-60)))
                 .build();
 
-        TrajectorySequence parkZoneThree = drive.trajectorySequenceBuilder(prePark.end())
-                .strafeRight(35)
+        TrajectorySequence parkZoneOne = drive.trajectorySequenceBuilder(tenTraj.end())
+                .lineToLinearHeading(new Pose2d(12, -13, Math.toRadians(90)))
+                .build();
+
+        TrajectorySequence parkZoneTwo = drive.trajectorySequenceBuilder(tenTraj.end())
+                .lineToLinearHeading(new Pose2d(35, -13, Math.toRadians(90)))
+                .build();
+
+        TrajectorySequence parkZoneThree = drive.trajectorySequenceBuilder(tenTraj.end())
+                .lineToLinearHeading(new Pose2d(57, -13, Math.toRadians(90)))
                 .build();
 
         AprilTagDetection detectedTag = null;
         while (!isStopRequested() && !opModeIsActive()) {
-            if (detectedTag == null)
-                detectedTag = detectionSystem.detect();
-            else
+            detectedTag = detectionSystem.detect();
+            if (detectedTag != null)
                 telemetry.addData("Detected Tag ID: " + detectedTag.id, " ");
 
             telemetry.update();
@@ -141,55 +160,186 @@ public class TestAutonomy2 extends LinearOpMode {
 
         detectionSystem.closeCamera();
 
+        target = 30;
         drive.followTrajectorySequenceAsync(startTraj);
-
+        servoAxle.setPosition(LiftSystem.LiftPositions.LOW_JUNCTION.axlePos);
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
-        drive.followTrajectorySequenceAsync(collectTraj);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.OPEN.position);
+        sleep(200);
 
+        drive.followTrajectorySequenceAsync(twoTraj);
         while (drive.isBusy()) {
             drive.update();
-            liftMotor.updatePosition();
         }
 
-        drive.followTrajectorySequenceAsync(travelTraj);
+        drive.followTrajectorySequenceAsync(threeTraj);
+        servoAxle.setPosition(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+        target = 360;
 
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
-        drive.followTrajectorySequenceAsync(collectTraj);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.CLOSED.position);
+        sleep(250);
+        target = (int) LiftSystem.LiftPositions.HIGH_JUNCTION.position + 50;
+        liftPID();
 
+        servoAxle.setPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.axlePos);
+
+        drive.followTrajectorySequenceAsync(fourTraj);
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
-        drive.followTrajectorySequenceAsync(travelTraj);
+        drive.followTrajectorySequenceAsync(fiveTraj);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.OPEN.position);
+        sleep(250);
+        servoAxle.setPosition(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+        servoJoint.setPosition(LiftNewClaw.JointModes.FRONT.position);
+        sleep(100);
+        target = 260;
 
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
-        drive.followTrajectorySequenceAsync(prePark);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.CLOSED.position);
+        sleep(250);
+        target = (int) LiftSystem.LiftPositions.HIGH_JUNCTION.position + 60;
+        liftPID();
 
+        servoAxle.setPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.axlePos);
+
+        drive.followTrajectorySequenceAsync(sixTraj);
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
-        drive.followTrajectorySequenceAsync(parkZoneThree);
+        servoClaw.setPosition(LiftNewClaw.ClawModes.OPEN.position);
+        sleep(250);
+        servoAxle.setPosition(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+        servoJoint.setPosition(LiftNewClaw.JointModes.FRONT.position);
+        sleep(100);
+        target = 170;
+
+        drive.followTrajectorySequenceAsync(sevenTraj);
+        while (drive.isBusy()) {
+            liftPID();
+            liftPID();
+            drive.update();
+            liftPID();
+            liftPID();
+        }
+
+        servoClaw.setPosition(LiftNewClaw.ClawModes.CLOSED.position);
+        sleep(250);
+        target = (int) LiftSystem.LiftPositions.HIGH_JUNCTION.position + 70;
+        liftPID();
+
+        servoAxle.setPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.axlePos);
+
+        drive.followTrajectorySequenceAsync(eightTraj);
+        while (drive.isBusy()) {
+            liftPID();
+            liftPID();
+            drive.update();
+            liftPID();
+            liftPID();
+        }
+
+        servoClaw.setPosition(LiftNewClaw.ClawModes.OPEN.position);
+        sleep(250);
+        servoAxle.setPosition(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+        servoJoint.setPosition(LiftNewClaw.JointModes.FRONT.position);
+        sleep(100);
+        target = 95;
+
+        drive.followTrajectorySequenceAsync(nineTraj);
+        while (drive.isBusy()) {
+            liftPID();
+            liftPID();
+            drive.update();
+            liftPID();
+            liftPID();
+        }
+
+        servoClaw.setPosition(LiftNewClaw.ClawModes.CLOSED.position);
+        sleep(250);
+        target = (int) LiftSystem.LiftPositions.HIGH_JUNCTION.position + 80;
+        liftPID();
+
+        servoAxle.setPosition(LiftSystem.LiftPositions.HIGH_JUNCTION.axlePos);
+
+        drive.followTrajectorySequenceAsync(tenTraj);
+        while (drive.isBusy()) {
+            liftPID();
+            liftPID();
+            drive.update();
+            liftPID();
+            liftPID();
+        }
+
+        servoClaw.setPosition(LiftNewClaw.ClawModes.OPEN.position);
+        sleep(250);
+        servoAxle.setPosition(LiftSystem.LiftPositions.STARTING_POS.axlePos);
+        servoJoint.setPosition(LiftNewClaw.JointModes.FRONT.position);
+        sleep(100);
+        target = 0;
+
+        if (detectedTag != null) {
+            if (detectedTag.id == 0)
+                drive.followTrajectorySequenceAsync(parkZoneOne);
+            else if (detectedTag.id == 1)
+                drive.followTrajectorySequenceAsync(parkZoneTwo);
+            else
+                drive.followTrajectorySequenceAsync(parkZoneThree);
+        } else
+            drive.followTrajectorySequenceAsync(parkZoneThree);
 
         while (drive.isBusy()) {
+            liftPID();
+            liftPID();
             drive.update();
-            liftMotor.updatePosition();
+            liftPID();
+            liftPID();
         }
 
         return;
+    }
+
+    void liftPID() {
+        controller.setTargetPosition(target);
+        int currPos = liftMotor.getCurrentPosition();
+        double pidVal = controller.update(currPos);
+
+        double ff = 1 * f;
+        double power = ff + pidVal;
+
+        liftMotor.setPower(power);
+        liftMotor2.setPower(power);
     }
 }

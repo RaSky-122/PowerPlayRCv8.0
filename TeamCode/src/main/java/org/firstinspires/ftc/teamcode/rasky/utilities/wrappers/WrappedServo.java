@@ -78,6 +78,13 @@ public class WrappedServo {
         }
     }
 
+    public double getPosition() {
+        if (!continuousMode)
+            return normalServo.getPosition();
+        else
+            return 0;
+    }
+
     public void setReversed(boolean isReversed) {
         this.isReversed = isReversed;
     }

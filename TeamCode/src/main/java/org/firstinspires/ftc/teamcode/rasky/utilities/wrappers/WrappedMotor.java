@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.rasky.utilities.wrappers;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -17,6 +19,7 @@ import org.firstinspires.ftc.teamcode.rasky.utilities.ControllerPID;
  */
 public class WrappedMotor {
     public DcMotorEx motor;
+    public DcMotorEx motor2;
     HardwareMap hardwareMap;
     VoltageSensor voltageSensor;
 
@@ -33,40 +36,49 @@ public class WrappedMotor {
      * @param positionPIDMode  If the motor position should be controlled by a PID controller or not
      * @param brakes           If the motor should brake on 0 power or not
      */
-    public void Init(String name, boolean isReversed, boolean velocityPIDFMode, boolean positionPIDMode, boolean brakes) {
+    public void Init(String name, String name2, boolean isReversed, boolean velocityPIDFMode, boolean positionPIDMode, boolean brakes) {
         motor = hardwareMap.get(DcMotorEx.class, name);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2 = hardwareMap.get(DcMotorEx.class, name2);
+
+        //motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
+
+        motor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         this.setDirection(isReversed);
         this.setPositionPIDMode(positionPIDMode);
-        this.setVelocityPIDFMode(velocityPIDFMode);
+        //this.setVelocityPIDFMode(velocityPIDFMode);
         this.setBrakes(brakes);
     }
+
+    PIDCoefficients posCoeffs = new PIDCoefficients(0.007, 0.003, 0.001);
+    PIDCoefficients velCoeffs = new PIDCoefficients(0.0005, 0.0000, 0.00005);
+    double maxVel = 1000;
+
+    PIDFController posController = new PIDFController(posCoeffs);
+    PIDFController velController = new PIDFController(velCoeffs);
+
+    public double calcPos;
+    public double power;
 
     /**
      * Call this method asynchronously to update the lift's motor position.
      */
     public void updatePosition() {
-        currentPosition = motor.getCurrentPosition() * encoderDirection;
+        currentPosition = motor.getCurrentPosition();
 
-        direction = getDirection();
-        voltageCompensation = getVoltageCompensation();
-        double PIDValue = positionPID.calculate(currentPosition, targetPosition);
+        posController.setTargetPosition(targetPosition);
 
-        if (this.isBusy()) {
-            if (positionPIDMode) {
-                double tempPower = -PIDValue * speedMultiplier * voltageCompensation + gravityCounter;
-                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(-PIDValue) * 0.3;
-                motor.setPower(tempPower);
-            } else {
-                double tempPower = direction * speedMultiplier * voltageCompensation + gravityCounter;
-                if (Math.abs(tempPower) < 0.3) tempPower += Math.signum(direction) * 0.3;
-                motor.setPower(tempPower);
-            }
-        } else
-            motor.setPower(0 + gravityCounter);
+        power = posController.update(currentPosition);
+        motor.setPower((power + 0.15) * 0.9);
+        motor2.setPower((power + 0.15) * 0.9);
+    }
 
+    public void resetPID() {
+        PIDFController posController = new PIDFController(posCoeffs);
     }
 
     // VOLTAGE RELATED STUFF
@@ -79,10 +91,7 @@ public class WrappedMotor {
     }
 
     public double getVoltageCompensation() {
-        if (voltageCompensated)
-            return (12 / voltageSensor.getVoltage());
-        else
-            return 1;
+        return (12 / voltageSensor.getVoltage());
     }
 
     // POSITION RELATED STUFF
@@ -128,6 +137,7 @@ public class WrappedMotor {
 
     public void setPower(double power) {
         motor.setPower(power);
+        motor2.setPower(power);
     }
 
     boolean hold = false;

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.rasky.utilities.wrappers;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -33,9 +35,10 @@ public class WrappedMotor2 {
      * @param positionPIDMode  If the motor position should be controlled by a PID controller or not
      * @param brakes           If the motor should brake on 0 power or not
      */
-    public void Init(String name, boolean isReversed, boolean velocityPIDFMode, boolean positionPIDMode, boolean brakes) {
+    public void Init(String name, boolean isReversed, boolean velocityPIDFMode, boolean positionPIDMode, boolean brakes, boolean reset) {
         motor = hardwareMap.get(DcMotorEx.class, name);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if (reset)
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         this.setDirection(isReversed);
@@ -47,10 +50,16 @@ public class WrappedMotor2 {
         this.setBrakes(brakes);
     }
 
+    PIDCoefficients coeffs = new PIDCoefficients(8, 3, 0);
+    PIDFController controller = new PIDFController(coeffs, 0, 0);
+
     /**
      * Call this method asynchronously to update the lift's motor position.
      */
     public void updatePosition() {
+
+        controller.setTargetPosition(targetPosition);
+
         if (motor.isBusy())
             motor.setPower(1);
         else
@@ -116,6 +125,10 @@ public class WrappedMotor2 {
 
     public void setPower(double power) {
         motor.setPower(power);
+    }
+
+    public double getPower() {
+        return motor.getPower();
     }
 
     boolean hold = false;

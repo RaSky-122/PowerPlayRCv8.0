@@ -33,8 +33,8 @@ public class DrivingMotors {
      */
     public void Init() {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        rightRear = hardwareMap.get(DcMotorEx.class, "frontEncoder");
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftEncoder");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         ArrayList<DcMotorEx> motors = new ArrayList<DcMotorEx>(Arrays.asList(leftRear, rightRear, leftFront, rightFront));
